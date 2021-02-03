@@ -10,18 +10,47 @@ from ecapture import ecapture as ec
 import wolframalpha
 import json
 import requests
-
-
-print('Loading your AI personal assistant - G One')
+import pathlib
+import sys
 
 engine=pyttsx3.init('sapi5')
 voices=engine.getProperty('voices')
 engine.setProperty('voice','voices[0].id')
 engine.setProperty('rate',140)
-
 def speak(text):
     engine.say(text)
     engine.runAndWait()
+    
+print('Loading your AI personal assistant - G One.')
+
+f=open('setup/setup.txt','r')
+x=f.readline()
+f.close()
+if x=='0':
+    x=str(pathlib.Path().absolute())+'\setup'
+    sys.path.insert(1, x)
+    speak('Installing necessary modules. Please wait...')
+    #print('Instaliravanje potrebnih modula. Pričekajte...')
+    import setup
+    f=open('setup/setup.txt','w')
+    f.write('1')
+    f.close()
+    import os, winshell
+    from win32com.client import Dispatch
+    desktop = winshell.desktop()
+    path = os.path.join(desktop, "Python AI Assistant.lnk")
+    target = r"{}\python ai.py".format(pathlib.Path().absolute())
+    wDir = r"{}".format(pathlib.Path().absolute())
+    icon = r"{}\python ai logo.ico".format(x)
+    shell = Dispatch('WScript.Shell')
+    shortcut = shell.CreateShortCut(path)
+    shortcut.Targetpath = target
+    shortcut.WorkingDirectory = wDir
+    shortcut.IconLocation = icon
+    shortcut.save()
+    
+
+
 
 def wishMe():
     hour=datetime.datetime.now().hour
@@ -59,7 +88,7 @@ speak("Loading your AI personal assistant G-One")
 wishMe()
 
 pauza=0
-warn=1
+warn=0
 if __name__=='__main__':
 
 
@@ -179,9 +208,9 @@ if __name__=='__main__':
             elif "log off" in statement or "sign out" in statement:
                 speak('Are you sure you want to log off of your computer?')
                 warn=1
-            if 'yes' in statement or 'da' in statement:
+            if 'yes' in statement or 'da' in statement and warn=1:
                 warn=0
-            if 'no' in statement or 'ne' in statement:
+            if 'no' in statement or 'ne' in statement and warn=1:
                 warn=1
             if warn==0: 
                 speak("Ok. Your pc will log off in 10 seconds. make sure you exit from all applications")
