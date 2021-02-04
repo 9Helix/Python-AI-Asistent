@@ -12,16 +12,19 @@ import json
 import requests
 import pathlib
 import sys
+from youtubesearchpython import VideosSearch
+
 
 engine=pyttsx3.init('sapi5')
 voices=engine.getProperty('voices')
 engine.setProperty('voice','voices[0].id')
-engine.setProperty('rate',140)
+engine.setProperty('rate',145)
+
 def speak(text):
     engine.say(text)
     engine.runAndWait()
     
-print('Loading your AI personal assistant - G One.')
+print('Loading your AI personal assistant - G One')
 
 f=open('setup/setup.txt','r')
 x=f.readline()
@@ -49,58 +52,58 @@ if x=='0':
     shortcut.IconLocation = icon
     shortcut.save()
     
-
-
-
 def wishMe():
     hour=datetime.datetime.now().hour
     if hour>=0 and hour<12:
         speak("Good Morning")
-        #print("Hello,Good Morning")
+        #print("Good Morning!")
     elif hour>=12 and hour<18:
         speak("Good Afternoon")
-        #print("Hello,Good Afternoon")
+        #print("Good Afternoon!")
     else:
         speak("Good Evening")
-        #print("Hello,Good Evening")
+        #print("Good Evening!")
 
 def takeCommand():
     r=sr.Recognizer()
     with sr.Microphone() as source:
         if pauza==0:
             print("Listening...")
-        elif pauza==1:
+        elif pauza==1 and status=='listening':
             print('Paused')
-        audio=r.listen(source)
-
+        r.adjust_for_ambient_noise(source)
+        #audio=r.listen(source)
+        audio=r.listen(source,  phrase_time_limit=3)
         try:
-            statement=r.recognize_google(audio,language='hr-HR')
-            print(f"user said: {statement}\n")
+            statement=r.recognize_google(audio,language='en-US')
+            print(f"User said: {statement}\n")
 
         except Exception as e:
             if pauza==0:
                 dad=0
-                #speak("Pardon me, please say that again")
+                speak("Pardon me, please say that again")
             return "None"
         return statement
 
 speak("Loading your AI personal assistant G-One")
 wishMe()
-
+speak("Tell me how can I help you?")
 pauza=0
 warn=0
+status='listening'
+
 if __name__=='__main__':
 
 
     while True:
-        #speak("Tell me how can I help you?")
         statement = takeCommand().lower()
         if statement==0:
             continue
-        if 'pauza' in statement and pauza==0:
+        if 'pause' in statement and pauza==0:
             speak('Pausing')
             pauza=1
-        if 'nastavi' in statement:
+            status='paused'
+        if 'continue' in statement:
             speak('Listening')
             pauza=0
         if pauza==0:
@@ -115,7 +118,18 @@ if __name__=='__main__':
                 speak("According to Wikipedia")
                 print(results)
                 speak(results)
-
+                
+            if 'youtube video' in statement:
+                speak('What is the desired term you want to search for?')
+                query=takeCommand()
+                speak('Searching...')
+                videosSearch = VideosSearch(query, limit = 1)
+                x=str(videosSearch.result())
+                y=x[x.find('https://www.youtube.com/watch?v='):
+                    x.find('https://www.youtube.com/watch?v=')+43]
+                print(y)
+                webbrowser.open_new_tab(y)
+                
             elif 'open youtube' in statement:
                 webbrowser.open_new_tab("https://www.youtube.com")
                 speak("youtube is open now")
@@ -145,17 +159,17 @@ if __name__=='__main__':
                     current_humidiy = y["humidity"]
                     z = x["weather"]
                     weather_description = z[0]["description"]
-                    speak(" Temperature in degrees celsius is " +
-                          str(int(current_temperature)-273) +
-                          "\n humidity in percentage is " +
-                          str(current_humidiy) +
-                          "\n description  " +
+                    speak(" Temperature is " +
+                          str(int(current_temperature)-273) + 'degrees celsius'
+                          "\n humidity is " +
+                          str(current_humidiy) +'percent'
+                          "\n with " +
                           str(weather_description))
-                    print(" Temperature in C° = " +
-                          str(int(current_temperature)-273) +
-                          "\n Humidity = " +
+                    print(" Temperature: " +
+                          str(int(current_temperature)-273)+' C°' +
+                          "\n Humidity: " +
                           str(current_humidiy) +'%'
-                          "\n Description = " +
+                          "\n Description: " +
                           str(weather_description))
 
                 else:
@@ -174,8 +188,8 @@ if __name__=='__main__':
 
 
             elif "who made you" in statement or "who created you" in statement or "who discovered you" in statement:
-                speak("I was built by Mirthula")
-                print("I was built by Mirthula")
+                speak("I was built by Mirthula and modified by Master Helix")
+                print("I was built by Mirthula and modified by Master Helix")
 
             elif "open stackoverflow" in statement:
                 webbrowser.open_new_tab("https://stackoverflow.com/login")
@@ -208,11 +222,12 @@ if __name__=='__main__':
             elif "log off" in statement or "sign out" in statement:
                 speak('Are you sure you want to log off of your computer?')
                 warn=1
-            if 'yes' in statement or 'da' in statement and warn=1:
+            if 'yes' in statement and warn==1:
+                warn=2
+            if 'no' in statement and warn==1:
                 warn=0
-            if 'no' in statement or 'ne' in statement and warn=1:
-                warn=1
-            if warn==0: 
+            if warn==2:
+                warn=0
                 speak("Ok. Your pc will log off in 10 seconds. make sure you exit from all applications")
                 subprocess.call(["shutdown", "/l"])
                 
